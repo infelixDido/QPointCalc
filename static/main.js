@@ -59,12 +59,12 @@ function setupCameraControls(type, canvas, camera) {
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     controls.radius += event.deltaY > 0 ? 0.1 : -0.1;
-    controls.radius = Math.max(2, Math.min(15, controls.radius));
+    controls.radius = Math.max(2, Math.min(45, controls.radius));
     updateCameraPosition();
   }, { passive: false });
 }
 
-function renderLatticeScene(lattice, containerId = "lattice-plot", color = 0xff0000, latticeType = "real") {
+function renderLatticeScene(lattice, containerId = "lattice-plot", color = 0xff0000, latticeType = "real", hexagonalOrientation = 0, repeats=1) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
   
@@ -73,17 +73,19 @@ function renderLatticeScene(lattice, containerId = "lattice-plot", color = 0xff0
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
+  const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--input-bg').trim();
+  scene.background = new THREE.Color(bgColor);
 
   const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
   setupCameraControls(latticeType, renderer.domElement, camera);
   
-  const axesHelper = new THREE.AxesHelper(5);
+  const axesHelper = new THREE.AxesHelper(3);
   scene.add(axesHelper);
 
-  function drawLatticeCell(vectors, color, repeats = 1) {
+  function drawLatticeCell(vectors, color, repeats = repeats, hexagonalOrientation = 0) {
     const [a, b, c] = vectors.map(v => new THREE.Vector3(...v));
 
-    const solidMaterial = new THREE.LineBasicMaterial({ color, opacity: 0.7, transparent: true });
+    const solidMaterial = new THREE.LineBasicMaterial({ color:0x000000, opacity: 0.7, transparent: true });
     const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
     const sphereMaterial = new THREE.MeshBasicMaterial({ color });
 
@@ -109,63 +111,108 @@ function renderLatticeScene(lattice, containerId = "lattice-plot", color = 0xff0
     solidEdges.forEach(([start, end]) => {
       const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
       const line = new THREE.Line(geometry, solidMaterial);
-      baseCell.add(line);
-    });
-
-    [A, B, C].forEach(vec => {
       const dot = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      dot.position.copy(vec);
+      dot.position.copy(end);
+      baseCell.add(line);
       baseCell.add(dot);
     });
-
-    /*const isHexagonal = angles &&
-      Math.abs(angles[0] - 90) < 1e-2 &&
-      Math.abs(angles[1] - 90) < 1e-2 &&
-      Math.abs(angles[2] - 120) < 1e-2;
-
-    console.log("Is hexagonal:", isHexagonal);*/
     
-    for (let i = 0; i < 3; i++) {
-      const angle = (i * 2 * Math.PI) / 3;  // 0, 120, 240 degrees
-      const instance = baseCell.clone();
-      instance.rotateZ(angle); // rotate around z (c axis)
-      scene.add(instance);
-    }
-    /*
-    for (let i = 0; i < repeats; i++) {
-        const cellInstance = baseCell.clone();
-        const offset = a.clone().multiplyScalar(i);
-        cellInstance.position.copy(offset);
-        scene.add(cellInstance);
-      }
-    */
-  }
-
-  /*
-  function drawVector(v, color) {
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(...v)
-    ]);
-    const mat = new THREE.LineBasicMaterial({ color });
-    const line = new THREE.Line(geometry, mat);
-    scene.add(line);
-
-    // Add a dot at the end
-    const sphereGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const sphereMaterial = new THREE.MeshBasicMaterial({ color });
     const dot = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    dot.position.set(...v);
-    scene.add(dot);
+    dot.position.copy(origin);
+    baseCell.add(dot);
+
+
+    if (hexagonalOrientation) {
+      let rotationAxis = new THREE.Vector3(0, 0, 1);
+      
+      // Determine rotation axis based on hexagonal orientation
+      if (hexagonalOrientation === 1) {
+        rotationAxis = new THREE.Vector3(1, 0, 0); // alpha
+      }
+      else if (hexagonalOrientation === 2) {
+        rotationAxis = new THREE.Vector3(0, 1, 0); // beta
+      }
+      else if (hexagonalOrientation === 3) {
+        rotationAxis = new THREE.Vector3(0, 0, 1); // gamma
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const angle = (i * 2 * Math.PI) / 3;
+        const instance = baseCell.clone();
+        instance.rotateOnAxis(rotationAxis, angle);
+        scene.add(instance);
+      }
+
+
+    } else {
+      for (let i = 0; i < repeats.a; i++) {
+        for (let j = 0; j < repeats.b; j++) {
+          for (let k = 0; k < repeats.c; k++) {
+            const cellInstance = baseCell.clone();
+            const offset = a.clone().multiplyScalar(i)
+              .add(b.clone().multiplyScalar(j))
+              .add(c.clone().multiplyScalar(k));
+            cellInstance.position.copy(offset);
+            scene.add(cellInstance);
+          }
+        }
+      }
+    }
   }
-  */
-  drawLatticeCell(lattice, color, 2);
+
+  drawLatticeCell(lattice, color, repeats, hexagonalOrientation);
 
   function animate() {
     requestAnimationFrame( animate );
     renderer.render(scene, camera);
   }
 
+  animate();
+}
+
+function renderBrillouinZone(vertices, edges, containerId = "bz-plot", color = 0x00ff00) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--input-bg').trim();
+  scene.background = new THREE.Color(bgColor);
+
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  setupCameraControls("reciprocal", renderer.domElement, camera);
+
+  const axesHelper = new THREE.AxesHelper(3);
+  scene.add(axesHelper);
+
+  // Material for the BZ edges
+  const lineMaterial = new THREE.LineBasicMaterial({ color: color, opacity: 0.8, transparent: true });
+
+  // Draw edges
+  edges.forEach(edge => {
+    const start = new THREE.Vector3(...edge.start);
+    const end = new THREE.Vector3(...edge.end);
+    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const line = new THREE.Line(geometry, lineMaterial);
+    scene.add(line);
+  });
+
+  // Add spheres at vertices (optional, for clarity)
+  const sphereGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+  const sphereMaterial = new THREE.MeshBasicMaterial({ color: color });
+  vertices.forEach(v => {
+    const dot = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    dot.position.set(...v);
+    scene.add(dot);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
   animate();
 }
 
@@ -189,6 +236,7 @@ async function submitForm() {
     }
 
     const data = {
+      space_group: document.getElementById("space_group").value,
       param1: document.getElementById("param1").value,
       param2: document.getElementById("param2").value,
       param3: document.getElementById("param3").value,
@@ -213,27 +261,27 @@ async function submitForm() {
 
     const result = await response.json();
     
-    document.getElementById("lat_info").innerHTML = `
+    document.getElementById("lat-info").innerHTML = `
       <pre>
         Lattice: ${result.lattice}
         Reciprocal: ${result.reciprocal_lattice}
-        Angle between ${u} and ${v}: ${result.angle.toFixed(3)}°
       </pre>
     `;
 
-    document.getElementById("angle_info").innerHTML = `
+    document.getElementById("angle-info").innerHTML = `
       <pre>
         Angle between ${u} and ${v}: ${result.angle.toFixed(3)}°
       </pre>
     `;
 
     const thetaCut = result.theta_cut;
+    console.log(thetaCut.traces);
+    console.log(thetaCut.layout);
 
     if (thetaCut) {
       Plotly.newPlot("thetaCutPlot", thetaCut.traces, thetaCut.layout);
-    } else {
-      console.log("No theta_cut data returned.");
     }
+
 
     const lattice_visual = result.lattice_visual;
 
@@ -243,16 +291,47 @@ async function submitForm() {
       parseFloat(document.getElementById("param6").value),
     ];
 
-    console.log("Lattice visual:", lattice_visual);
-    console.log("Angles:", angles);
-    
-    if (lattice_visual) {
-      renderLatticeScene(lattice_visual, "lattice-plot", 0xff0000, "real");
+    function getHexagonalOrientation(angles) {
+      const tolerance = 1e-2;
+      const sorted = [...angles].sort((a, b) => a - b);
+      const isHex = 
+      Math.abs(sorted[0] - 90) < tolerance &&
+      Math.abs(sorted[1] - 90) < tolerance &&
+      Math.abs(sorted[2] - 120) < tolerance;
+      
+      if (!isHex) return 0;
+
+      if (Math.abs(angles[0] - 120) < tolerance) return 1; // alpha
+      if (Math.abs(angles[1] - 120) < tolerance) return 2; // beta
+      if (Math.abs(angles[2] - 120) < tolerance) return 3; // gamma
+      return 0;
     }
+
+    const hexagonalOrientation = getHexagonalOrientation(angles);
+
+    const repeats = {
+      a: parseInt(document.getElementById("repeat-a").value),
+      b: parseInt(document.getElementById("repeat-b").value),
+      c: parseInt(document.getElementById("repeat-c").value),
+    };
+
+    if (lattice_visual) {
+      renderLatticeScene(lattice_visual, "lattice-plot", 0xff0000, "real", hexagonalOrientation, repeats);
+    }
+    
+    const bz_vertices = result.bz_vertices;
+    const bz_edges = result.bz_edges;
+
+    if (bz_vertices && bz_edges) {
+      renderBrillouinZone(bz_vertices, bz_edges, "bz-plot", 0x00ff00,)
+    }
+
+
     /*
     const reciprocal_lattice_visual = result.reciprocal_lattice_visual;
+
     if (reciprocal_lattice_visual) {
-      renderLatticeScene(reciprocal_lattice_visual, "recip-lattice-plot", 0x0000ff, angles, "reciprocal");
+      renderLatticeScene(reciprocal_lattice_visual, "recip-lattice-plot", 0x0000ff, "reciprocal", hexagonalOrientation, repeats);
     }
     */
 
@@ -276,3 +355,5 @@ async function submitForm() {
     });
     */
 }
+
+

@@ -1,0 +1,11 @@
+:root {
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --input-bg: #ffffff;
+    --input-border: #ccc;
+    --primary-color: #030207;
+    --primary-hover: #000000;
+    --calc-border: #333;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --header-color: #333;
+  }

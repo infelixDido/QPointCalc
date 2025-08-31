@@ -4,86 +4,129 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1280" />
   <title>QPointCalculator - DeLTA Lab</title>
+  <link id="theme-style" rel="stylesheet" href="">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 </head>
 
 <body>
   <h1>QPointCalculator</h1>
-  <div class="input_container">
-    <section>
-      <div class="input_field">
-        <label for="param1">a (Å)</label>
-        <input id="param1" placeholder="a" value="4.1">
-      </div>
-      
-      <div class="input_field">
-        <label for="param4">α (degrees)</label>
-        <input id="param4" placeholder="alpha" value="43">
-      </div>
-
-      <div class="input_field">
-        <label for="param2">b (Å)</label>
-        <input id="param2" placeholder="b" value="4.1">
-      </div>
-
-      <div class="input_field">
-        <label for="param5">β (degrees)</label>
-        <input id="param5" placeholder="beta" value="68">
-      </div>
+  <div id="main-container">
+    <div id="input-container">
+    <button id="theme-toggle">
+      <i class="fa-solid fa-sun"></i>
+      <i class="fa-solid fa-moon"></i>
+    </button>
     
-      <div class="input_field">
-        <label for="param3">c (Å)</label>
-        <input id="param3" placeholder="c" value="3">
-      </div>
+    <div id="lat-param-container" class="input_container">
+      <h2>Lattice Parameters</h2>
+      <section>
+        <div class="input_field">
+          <label for="param1">a (Å)</label>
+          <input id="param1" placeholder="a" value="4.1">
+        </div>
+        
+        <div class="input_field">
+          <label for="param4">α (degrees)</label>
+          <input id="param4" placeholder="alpha" value="43">
+        </div>
+
+        <div class="input_field">
+          <label for="param2">b (Å)</label>
+          <input id="param2" placeholder="b" value="4.1">
+        </div>
+
+        <div class="input_field">
+          <label for="param5">β (degrees)</label>
+          <input id="param5" placeholder="beta" value="68">
+        </div>
       
-      <div class="input_field">
-        <label for="param6">γ (degrees)</label>
-        <input id="param6" placeholder="gamma" value="55">
-      </div>
-    </section>
+        <div class="input_field">
+          <label for="param3">c (Å)</label>
+          <input id="param3" placeholder="c" value="3">
+        </div>
+        
+        <div class="input_field">
+          <label for="param6">γ (degrees)</label>
+          <input id="param6" placeholder="gamma" value="55">
+        </div>
+        <div class="input_field">
+          <label for="space_group">Space Group (1-230)</label>
+          <input id="space_group" type="number" min="1" max="230" value="1">
+        </div>
+      </section>
+      <h2>Angle Between Lattice Vectors</h2>
+      <section>
+        <div class="input_field">
+          <label for="u">u (h, k, l)</label>
+          <input type="text" id="u" placeholder="u Ex:[1, 0, 0]" value="[1, 0, 0]">
+        </div>
+        <div class="input_field">
+          <label for="v">v (h, k, l)</label>
+          <input type="text" id="v" placeholder="v Ex:[0, 1, 0]" value="[0, 1, 0]">
+        </div>
+      </section>
+      <h2>Real Space Lattice Repetitions</h2>
+      <section class="repeat-section">
+        <div class="input-field">
+          <label>Repeat a: <input id="repeat-a" min="1" value="1" /></label>
+        </div>
+        <div class="input-field">
+          <label>Repeat b: <input id="repeat-b" min="1" value="1" /></label>
+        </div>
+        <div class="input-field">
+          <label>Repeat c: <input id="repeat-c" min="1" value="1" /></label>
+        </div>
+      </section>
+      <h2>Scattering Parameters</h2>
+      <section>
+        <div class="input_field">
+          <label for="two_theta">two theta</label>
+          <input type="text" id="two_theta" placeholder="[90, 110, 130]" value="[90, 110, 130]">
+        </div>
+        <div class="input_field">
+          <label for="param7">wavelength</label>
+          <input id="param7" placeholder="wavelength" value="25">
+        </div>
+        <div class="input_field">
+          <label for="r">r (h, k, l)</label>
+          <input type="text" id="r" placeholder="r Ex:[1, 0, 0]" value="[2, 1, 0]">
+        </div>
+        <div class="input_field">
+          <label for="w">w (h, k, l)</label>
+          <input type="text" id="w" placeholder="w Ex:[0, 1, 0]" value="[0, -1, 3]">
+        </div>
+      </section>
+    </div>
+    </div>
+
     
-    <div id="lat_info"></div>
-    <section>
-      <div class="input_field">
-        <label for="u">u (h, k, l)</label>
-        <input type="text" id="u" placeholder="u Ex:[1, 0, 0]" value="[1, 0, 0]">
-      </div>
-      <div class="input_field">
-        <label for="v">v (h, k, l)</label>
-        <input type="text" id="v" placeholder="v Ex:[0, 1, 0]" value="[0, 1, 0]">
-      </div>
-      <div id="angle_info"></div>
-    </section>
-    <section>
-      <div class="input_field">
-        <label for="two_theta">two theta</label>
-        <input type="text" id="two_theta" placeholder="[90, 110, 130]" value="[90, 110, 130]">
-      </div>
-      <div class="input_field">
-        <label for="param7">wavelength</label>
-        <input id="param7" placeholder="wavelength" value="25">
-      </div>
-      <div class="input_field">
-        <label for="r">r (h, k, l)</label>
-        <input type="text" id="r" placeholder="r Ex:[1, 0, 0]" value="[2, 1, 0]">
-      </div>
-      <div class="input_field">
-        <label for="w">w (h, k, l)</label>
-        <input type="text" id="w" placeholder="w Ex:[0, 1, 0]" value="[0, -1, 3]">
-      </div>
-    </section>
+    <div id="result-container">
+      <h2>Lattice / Reciprocal Lattice Info</h2>
+      <div id="lat-info"></div>
+      <h2>Angle Info</h2>
+      <div id="angle-info"></div>
+      
+      <!--<div id="plot"></div>-->
+      <h2>Theta Cut Plot</h2>
+      <div id="thetaCutPlot"></div>
+      <h2>Real Space Lattice Visual</h2>
+      <div id="lattice-plot" ></div>
+      <h2>First Brillouin Zone Visual</h2>
+      <div id="bz-plot"></div>
+    </div> 
+  </div id="credits">
+  <p>Developed by Colin Bradley</p>
+  <p><i class="fa-solid fa-envelope"></i>    bradleycolin08@gmail.com</p>
+</div>
+    
+  <div class="button-container">
+    <button id="calculate-button" onclick="submitForm()">Calculate</button>
   </div>
-
   
-  <button onclick="submitForm()">Calculate</button>
-
-  <div id="plot"></div>
-  <div id="thetaCutPlot"></div>
-  <div id="lattice-plot" ></div>
-  <div id="recip-lattice-plot"></div>
-  
-  
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js""></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script src="{{ url_for('static', filename='theme_toggle.js') }}"></script>
 </body>

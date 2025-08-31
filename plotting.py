@@ -31,12 +31,17 @@ def get_theta_cut_plot_data(u, v, lat, rlat, wl, two_theta):
             "line": {"dash": "dot", "color": colors[j % len(colors)]},
             "name": f"2θ = {tth}",
         }
+
         plot_data["traces"].append(trace)
 
-        plot_data["layout"] = {
-            "xaxis": {"title": f"[0, 0, l] (r.l.u.)", "range": [-0.35, 0.35]},
-            "yaxis": {"title": f"[-h, 2h, 0] (r.l.u.)", "range": [0.0, 0.25]},
-            "title": "Theta Cuts for Lattice",
+    
+    plot_data["layout"] = {
+        "xaxis": {"title": f"{u} (r.l.u.)", "range": [-0.35, 0.35]},
+        "yaxis": {"title": f"{v} (r.l.u.)", "range": [0.0, 0.25]},
+
+        
+        "title": "Theta Cuts for Lattice",
+        "hovermode": False,
     }
               
     return plot_data
